@@ -260,6 +260,7 @@ if st.session_state.questions:
                                 st.session_state.questions,
                                 st.session_state.answers
                             )
+                            st.session_state.interview_report = report
 
                         except Exception:
                             st.error("⚠️ Unable to generate interview report. Please try again.")
