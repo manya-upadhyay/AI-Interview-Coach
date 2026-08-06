@@ -198,7 +198,7 @@ if st.session_state.questions:
             st.session_state[f"answer_{index}"] = speech_text
 
         st.success("✅ Voice converted to text")
-
+        st.rerun()
     answer = st.text_area(
         "Your Answer",
         key=f"answer_{index}"
