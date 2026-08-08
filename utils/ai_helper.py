@@ -29,7 +29,7 @@ def handle_gemini_error(e):
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 def analyze_resume(resume_text):
 
