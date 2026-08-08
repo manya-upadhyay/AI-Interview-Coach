@@ -139,14 +139,16 @@ def evaluate_interview(questions, answers):
     qa = ""
 
     for i in range(len(questions)):
+        answer_text = answers.get(i) or answers.get(str(i)) or ""
         qa += f"""
 Question {i+1}:
 {questions[i]}
 
 Answer:
-{answers.get(i, "")}
+{answer_text}
 
 """
+
 
     prompt = f"""
 You are an expert HR interviewer.

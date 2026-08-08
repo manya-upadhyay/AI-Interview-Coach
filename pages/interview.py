@@ -32,6 +32,90 @@ class VideoProcessor(VideoProcessorBase):
             format="bgr24"
         )
 
+def show_completed_report(report):
+    st.success("Interview Completed 🎉")
+    st.subheader("📊 AI Interview Performance Report")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("⭐ Overall Score", f"{report.get('overall_score', 0)}/100")
+        st.metric("💻 Technical Score", f"{report.get('technical', 0)}/10")
+        st.metric("🧠 Problem Solving", f"{report.get('problem_solving', 0)}/10")
+
+    with col2:
+        st.metric("🗣 Communication", f"{report.get('communication', 0)}/10")
+        st.metric("😊 Confidence", f"{report.get('confidence_score', report.get('confidence', 75))}%")
+
+    st.markdown("---")
+
+    st.subheader("✅ Strengths")
+    strengths = report.get("strengths", [])
+    if isinstance(strengths, list) and len(strengths) > 0:
+        for item in strengths:
+            st.success(f"✔️ {item}")
+    else:
+        st.write(strengths)
+
+    st.subheader("⚠ Weaknesses & Areas for Improvement")
+    weaknesses = report.get("weaknesses", [])
+    if isinstance(weaknesses, list) and len(weaknesses) > 0:
+        for item in weaknesses:
+            st.warning(f"⚠️ {item}")
+    else:
+        st.write(weaknesses)
+
+    st.subheader("💡 Suggestions for Improvement")
+    suggestions = report.get("suggestions", [])
+    if isinstance(suggestions, list) and len(suggestions) > 0:
+        for item in suggestions:
+            st.info(f"💡 {item}")
+    else:
+        st.write(suggestions)
+
+    st.subheader("🎯 Final Recommendation")
+    st.success(report.get("final_recommendation", "Recommended"))
+
+    st.markdown("---")
+
+    pdf_bytes = st.session_state.get("pdf_bytes")
+    if not pdf_bytes:
+        pdf_path = st.session_state.get("pdf_path", "reports/interview_report.pdf")
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as pdf:
+                pdf_bytes = pdf.read()
+                st.session_state.pdf_bytes = pdf_bytes
+        elif report:
+            try:
+                pdf_path = generate_pdf(json.dumps(report, indent=4))
+                with open(pdf_path, "rb") as pdf:
+                    pdf_bytes = pdf.read()
+                    st.session_state.pdf_bytes = pdf_bytes
+            except Exception as e:
+                print("PDF generation error:", e)
+
+    if pdf_bytes:
+        st.download_button(
+            "📄 Download Complete Report PDF",
+            data=pdf_bytes,
+            file_name="Interview_Report.pdf",
+            mime="application/pdf",
+            key="download_pdf_report_btn"
+        )
+
+    st.markdown("---")
+    if st.button("🔄 Start New Interview", key="start_new_interview_btn"):
+        st.session_state.interview_completed = False
+        st.session_state.interview_report = None
+        st.session_state.pdf_bytes = None
+        st.session_state.questions = []
+        st.session_state.current_question = 0
+        st.session_state.answers = {}
+        if "report_saved" in st.session_state:
+            del st.session_state.report_saved
+        st.rerun()
+
+
 # ---------------- LOGIN CHECK ---------------- #
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.warning("⚠️ Please login first.")
@@ -78,79 +162,8 @@ if "interview_completed" not in st.session_state:
     st.session_state.interview_completed = False
 
 # ---------------- SHOW COMPLETED REPORT ---------------- #
-if st.session_state.get("interview_completed", False):
-    report = st.session_state.get("interview_report", {})
-
-    st.success("Interview Completed 🎉")
-    st.subheader("📊 AI Interview Report")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.metric("⭐ Overall Score", f"{report.get('overall_score', 0)}/100")
-        st.metric("💻 Technical", f"{report.get('technical', 0)}/10")
-        st.metric("🧠 Problem Solving", f"{report.get('problem_solving', 0)}/10")
-
-    with col2:
-        st.metric("🗣 Communication", f"{report.get('communication', 0)}/10")
-        st.metric("😊 Confidence", f"{report.get('confidence_score', 0)}%")
-
-    st.markdown("---")
-
-    st.subheader("✅ Strengths")
-    for item in report.get("strengths", []):
-        st.success(item)
-
-    st.subheader("⚠ Weaknesses")
-    for item in report.get("weaknesses", []):
-        st.warning(item)
-
-    st.subheader("💡 Suggestions")
-    for item in report.get("suggestions", []):
-        st.info(item)
-
-    st.subheader("🎯 Final Recommendation")
-    st.success(report.get("final_recommendation", "N/A"))
-
-    st.markdown("---")
-
-    pdf_bytes = st.session_state.get("pdf_bytes")
-    if not pdf_bytes:
-        pdf_path = st.session_state.get("pdf_path", "reports/interview_report.pdf")
-        if pdf_path and os.path.exists(pdf_path):
-            with open(pdf_path, "rb") as pdf:
-                pdf_bytes = pdf.read()
-                st.session_state.pdf_bytes = pdf_bytes
-        elif report:
-            try:
-                pdf_path = generate_pdf(json.dumps(report, indent=4))
-                with open(pdf_path, "rb") as pdf:
-                    pdf_bytes = pdf.read()
-                    st.session_state.pdf_bytes = pdf_bytes
-            except Exception as e:
-                print("PDF generation error:", e)
-
-    if pdf_bytes:
-        st.download_button(
-            "📄 Download Report PDF",
-            data=pdf_bytes,
-            file_name="Interview_Report.pdf",
-            mime="application/pdf",
-            key="download_pdf_report"
-        )
-
-
-    st.markdown("---")
-    if st.button("🔄 Start New Interview"):
-        st.session_state.interview_completed = False
-        st.session_state.interview_report = None
-        st.session_state.questions = []
-        st.session_state.current_question = 0
-        st.session_state.answers = {}
-        if "report_saved" in st.session_state:
-            del st.session_state.report_saved
-        st.rerun()
-
+if st.session_state.get("interview_completed", False) and st.session_state.get("interview_report"):
+    show_completed_report(st.session_state.interview_report)
     st.stop()
 
 # ---------------- INTERVIEW SETUP ---------------- #
@@ -192,6 +205,8 @@ if st.button("🤖 Generate Interview Questions"):
         st.session_state.current_question = 0
         st.session_state.question_start_time = time.time()
         st.session_state.answers = {}
+        st.session_state.interview_completed = False
+        st.session_state.interview_report = None
         st.rerun()
 
 # ---------------- SHOW QUESTIONS ---------------- #
@@ -358,11 +373,11 @@ if st.session_state.questions:
                     try:
                         pdf_path = generate_pdf(json.dumps(report, indent=4))
                         st.session_state.pdf_path = pdf_path
+                        with open(pdf_path, "rb") as f:
+                            st.session_state.pdf_bytes = f.read()
                     except Exception as pdf_err:
                         print("PDF generation warning:", pdf_err)
 
-                    # Store state and rerun to show report
                     st.session_state.interview_report = report
                     st.session_state.interview_completed = True
                     st.rerun()
-
