@@ -51,7 +51,7 @@ else:
     st.caption("This graph shows the scores of completed interviews only.")
     st.line_chart(chart_data.set_index("Interview"))
 
-    for interview in history:
+    for idx, interview in enumerate(history):
 
         st.markdown("---")
 
@@ -60,3 +60,16 @@ else:
 
         with st.expander("View Report"):
             st.markdown(interview[2])
+            try:
+                from utils.pdf_generator import generate_pdf
+                hist_pdf_path = generate_pdf(interview[2])
+                with open(hist_pdf_path, "rb") as pdf_file:
+                    st.download_button(
+                        "📄 Download PDF",
+                        pdf_file,
+                        file_name=f"Interview_Report_{idx+1}.pdf",
+                        mime="application/pdf",
+                        key=f"hist_pdf_{idx}"
+                    )
+            except Exception as e:
+                print("History PDF error:", e)

@@ -114,16 +114,31 @@ if st.session_state.get("interview_completed", False):
 
     st.markdown("---")
 
-    pdf_path = st.session_state.get("pdf_path", "reports/interview_report.pdf")
-    if pdf_path and os.path.exists(pdf_path):
-        with open(pdf_path, "rb") as pdf:
-            st.download_button(
-                "📄 Download Report PDF",
-                pdf,
-                file_name="Interview_Report.pdf",
-                mime="application/pdf",
-                key="download_pdf_report"
-            )
+    pdf_bytes = st.session_state.get("pdf_bytes")
+    if not pdf_bytes:
+        pdf_path = st.session_state.get("pdf_path", "reports/interview_report.pdf")
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as pdf:
+                pdf_bytes = pdf.read()
+                st.session_state.pdf_bytes = pdf_bytes
+        elif report:
+            try:
+                pdf_path = generate_pdf(json.dumps(report, indent=4))
+                with open(pdf_path, "rb") as pdf:
+                    pdf_bytes = pdf.read()
+                    st.session_state.pdf_bytes = pdf_bytes
+            except Exception as e:
+                print("PDF generation error:", e)
+
+    if pdf_bytes:
+        st.download_button(
+            "📄 Download Report PDF",
+            data=pdf_bytes,
+            file_name="Interview_Report.pdf",
+            mime="application/pdf",
+            key="download_pdf_report"
+        )
+
 
     st.markdown("---")
     if st.button("🔄 Start New Interview"):
