@@ -1,8 +1,12 @@
 import sqlite3
 import bcrypt
+import os
+
 def create_connection():
+    os.makedirs("database", exist_ok=True)
     conn = sqlite3.connect("database/interview_coach.db")
     return conn
+
 
 def create_table():
     conn = create_connection()
