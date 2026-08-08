@@ -81,26 +81,28 @@ with st.sidebar:
 
     st.divider()
 
+with st.sidebar:
+
+
+
     st.markdown(
         """
         <h3 style="color:white;">
-        🔑 API Key Settings
+        👤 Profile
         </h3>
         """,
         unsafe_allow_html=True
     )
-    user_key = st.text_input(
-        "Enter Custom Gemini API Key",
-        type="password",
-        help="Get a free key from Google AI Studio (aistudio.google.com) to bypass quota limits.",
-        key="app_sidebar_api_key"
-    )
-    if user_key:
-        st.session_state.custom_gemini_api_key = user_key
-        st.caption("✅ Custom API Key active!")
+
+    if "user" in st.session_state:
+        st.write(f"Welcome, {st.session_state.user} 👋")
+
+    if "email" in st.session_state:
+        st.write(st.session_state.email)
+
+
 
 st.divider()
-
 
 st.markdown(
     """
