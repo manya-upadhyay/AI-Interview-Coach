@@ -3,13 +3,14 @@ import os
 from utils.ai_helper import analyze_resume
 from utils.resume_parser import extract_text
 
+st.set_page_config(page_title="Resume Upload", layout="wide")
+
 # ---------------- LOGIN CHECK ---------------- #
 
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.warning("⚠️ Please login first.")
     st.switch_page("pages/login.py")
 
-st.set_page_config(page_title="Resume Upload", layout="wide")
 
 st.title("📄 Resume Upload")
 
