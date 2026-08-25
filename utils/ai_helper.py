@@ -27,9 +27,28 @@ def handle_gemini_error(e):
     else:
         return f"⚠️ {error}"
 
-genai.configure(api_key=GEMINI_API_KEY)
+def get_model():
+    from config import GEMINI_API_KEY
+    key = GEMINI_API_KEY
+    if not key:
+        try:
+            import streamlit as st
+            if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+                key = st.secrets["GEMINI_API_KEY"]
+        except Exception:
+            pass
+    if not key:
+        raise Exception("Gemini API Key is not set. Please configure GEMINI_API_KEY in Streamlit Secrets or .env file.")
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+    genai.configure(api_key=key)
+    models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    for m in models:
+        try:
+            return genai.GenerativeModel(m)
+        except Exception:
+            continue
+    return genai.GenerativeModel("gemini-1.5-flash")
+
 
 def analyze_resume(resume_text):
 
@@ -72,7 +91,7 @@ Resume:
 
     try:
 
-        response = model.generate_content(prompt)
+        response = get_model().generate_content(prompt)
 
         text = response.text.strip()
 
@@ -108,31 +127,60 @@ Resume:
 def evaluate_answer(question, answer):
 
     prompt = f"""
-You are an expert technical interviewer.
+You are an AI Interview Coach.
+
+Evaluate the candidate's answer ONLY according to the interview question.
 
 Question:
 {question}
 
-Candidate Answer:
+Candidate's Answer:
 {answer}
 
-Evaluate using this format:
+Give concise, specific and practical feedback.
 
-Score (out of 10):
-Strengths:
-Weaknesses:
-Improved Answer:
-"""
+STRICT RULES:
+- Give a fair score from 0 to 10.
+- Do not explain the complete topic.
+- Do not repeat the question.
+- Do not invent information.
+- Do not give generic feedback.
+- Focus only on the candidate's actual answer.
+- Use maximum 2 points in each section.
+- Every point must be a short sentence.
+- Do not write paragraphs.
+
+Return ONLY this exact format:
+
+Score: <score>/10
+
+What was good:
+- <short point>
+- <short point>
+
+What needs improvement:
+- <short point>
+- <short point>
+
+AI Suggestions:
+- <short actionable point>
+- <short actionable point>
+
+IMPORTANT:
+The "AI Suggestions" section MUST contain exactly 2 bullet points.
+Never leave the AI Suggestions section empty.
+    """
 
     try:
-        response = model.generate_content(prompt)
-        return response.text
+
+        response = get_model().generate_content(prompt)
+
+        return response.text.strip()
 
     except Exception as e:
+
         return handle_gemini_error(e)
 
-import json
-import re
 
 def evaluate_interview(questions, answers):
 
@@ -184,7 +232,7 @@ Rules:
 
     try:
 
-        response = model.generate_content(prompt)
+        response = get_model().generate_content(prompt)
 
         text = response.text.strip()
 
@@ -235,7 +283,7 @@ Rules:
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = get_model().generate_content(prompt)
 
         questions = response.text.split("\n")
         questions = [q.strip() for q in questions if q.strip()]

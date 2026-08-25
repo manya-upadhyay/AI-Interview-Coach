@@ -21,21 +21,18 @@ def recognize_speech():
         print("Recognized:", repr(text))
         return text
 
-    except sr.WaitTimeoutError:
-        print("No speech detected.")
-        return ""
-
-    except sr.UnknownValueError:
-        print("Could not understand audio.")
+    except (sr.WaitTimeoutError, sr.UnknownValueError):
+        print("No speech detected or could not understand audio.")
         return ""
 
     except sr.RequestError as e:
         print("Google Speech API Error:", e)
         return ""
 
-    except Exception as e:
-        print("Error:", e)
-        return ""
+    except (AttributeError, OSError, Exception) as e:
+        print("System Microphone Error (Cloud environment detected):", e)
+        return "SYSTEM_MIC_UNAVAILABLE"
+
 
 
 def recognize_speech_from_audio(audio_file):
